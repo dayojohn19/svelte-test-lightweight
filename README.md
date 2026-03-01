@@ -4,15 +4,16 @@
 
 This project must be deployed from the built `dist` output (not from repository root files).
 
-- Repo URL: `https://dayojohn19.github.io/`
-- Vite base path is set to `/` in `vite.config.js`.
-- A workflow is included at `.github/workflows/deploy.yml` to publish `dist` on every push to `main`.
+- Repo URL: `https://dayojohn19.github.io/svelte-test-lightweight/`
+- Vite base path is set to `/svelte-test-lightweight/` in `vite.config.js`.
+- Deploy command publishes `dist` to `gh-pages` branch.
 
 ### One-time GitHub setup
 
 1. Open repository **Settings → Pages**.
-2. Set **Source** to **GitHub Actions**.
+2. Set **Source** to **Deploy from a branch**.
+3. Select branch **gh-pages** and folder **/(root)**.
 
 ### Deploy
 
-- Push to `main` and wait for the `Deploy to GitHub Pages` workflow to finish.
+- Run `npm run deploy`.
