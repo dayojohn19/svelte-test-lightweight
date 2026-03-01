@@ -8,7 +8,38 @@
     return match?.[1]?.trim() || fallbackValue;
   }
 
-  const POSTCARD_DETAILS_API = getMarkdownValue(
+  function normalizeLookApiBaseUrl(urlValue) {
+    const normalizedUrl = String(urlValue ?? '').trim().replace(/\/+$/, '');
+
+    if (!normalizedUrl) {
+      return '';
+    }
+
+    const segments = normalizedUrl.split('/');
+    const secondLastSegment = segments[segments.length - 2];
+
+    if (secondLastSegment === 'look') {
+      segments.pop();
+    }
+
+    return `${segments.join('/')}/`;
+  }
+
+  function extractDefaultCollectionStr(urlValue, fallbackValue = '11111') {
+    const normalizedUrl = String(urlValue ?? '').trim().replace(/\/+$/, '');
+
+    if (!normalizedUrl) {
+      return fallbackValue;
+    }
+
+    const segments = normalizedUrl.split('/');
+    const lastSegment = segments[segments.length - 1] || '';
+    const secondLastSegment = segments[segments.length - 2];
+
+    return secondLastSegment === 'look' ? lastSegment : fallbackValue;
+  }
+
+  const API_BASE_URL = getMarkdownValue(
     'API_BASE_URL',
     'http://127.0.0.1:8000/garden/look/ZN6RF9/'
   );
@@ -25,7 +56,8 @@
   );
   const LOCAL_STORAGE_USER_ID_KEY = getMarkdownValue('LOCAL_STORAGE_USER_ID_KEY', 'postcard_user_id');
   const LOCAL_STORAGE_THEME_KEY = getMarkdownValue('LOCAL_STORAGE_THEME_KEY', 'postcard_theme');
-  const DEFAULT_COLLECTION_STR = POSTCARD_DETAILS_API.split('/').filter(Boolean).pop() || 'ZN6RF9';
+  const POSTCARD_DETAILS_API_BASE_URL = normalizeLookApiBaseUrl(API_BASE_URL);
+  const DEFAULT_COLLECTION_STR = extractDefaultCollectionStr(API_BASE_URL, '11111');
   const LOADING_DELAY_MS = Number(getMarkdownValue('LOADING_DELAY_MS', '1500')) || 1500;
   const MAIN_IMAGE_URL = getMarkdownValue('MAIN_IMAGE_URL', 'https://placehold.co/960x540/png');
   const POSTCARD_MEMORY_IMAGE_URLS = [
@@ -242,8 +274,12 @@
     return pathSegments[pathSegments.length - 1] || DEFAULT_COLLECTION_STR;
   }
 
+  function getPostcardDetailsApiUrl() {
+    return `${POSTCARD_DETAILS_API_BASE_URL}${getCollectionStrFromUrl()}/`;
+  }
+
   async function fetchLookPlaceData() {
-    const response = await fetch(POSTCARD_DETAILS_API, {
+    const response = await fetch(getPostcardDetailsApiUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
