@@ -1102,15 +1102,16 @@
 
   @media (max-width: 680px) {
     .page {
-      padding: 0.9rem 0.8rem 2rem;
+      padding: 0.9rem max(0.8rem, env(safe-area-inset-right)) 2rem max(0.8rem, env(safe-area-inset-left));
     }
 
     .brand {
       font-size: 1.22rem;
+      width: 100%;
     }
 
     .hero {
-      padding: 2rem 0 1.3rem;
+      padding: 1.6rem 0 1.2rem;
     }
 
     .subtext {
@@ -1127,6 +1128,18 @@
       order: 2;
       border-radius: 0.8rem;
       padding: 0.5rem 0.65rem;
+    }
+
+    .account-chip span {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .theme-toggle {
+      width: 2.2rem;
+      height: 2.2rem;
+      font-size: 1rem;
     }
 
     .postcard-frame,
@@ -1153,13 +1166,29 @@
     .hero-actions .ghost,
     .image-field-input {
       width: 100%;
-      min-height: 42px;
+      min-height: 46px;
     }
 
     .credentials-form input,
     .cta,
     .ghost {
-      min-height: 42px;
+      min-height: 46px;
+    }
+
+    .credentials-form label {
+      font-size: 0.9rem;
+      gap: 0.4rem;
+    }
+
+    .credentials-form input,
+    .image-field-input {
+      font-size: 16px;
+      padding: 0.72rem 0.72rem;
+    }
+
+    .credentials-error {
+      font-size: 0.95rem;
+      line-height: 1.45;
     }
 
     .grid,
@@ -1170,17 +1199,22 @@
 
     .collection-image,
     .memory-image {
-      height: 156px;
+      height: 170px;
     }
 
     .topbar {
       flex-wrap: wrap;
+      align-items: flex-start;
       gap: 0.65rem;
     }
 
   }
 
   @media (max-width: 420px) {
+    .page {
+      padding: 0.75rem max(0.65rem, env(safe-area-inset-right)) 1.6rem max(0.65rem, env(safe-area-inset-left));
+    }
+
     .brand {
       font-size: 1.12rem;
     }
@@ -1194,6 +1228,25 @@
       font-size: 0.94rem;
     }
 
+    .hero {
+      padding: 1.2rem 0 1rem;
+    }
+
+    .credentials-box,
+    .postcard-frame,
+    .card,
+    .memory-card {
+      border-radius: 0.75rem;
+    }
+
+    .credentials-box {
+      padding: 0.85rem;
+    }
+
+    .credentials-box h3 {
+      font-size: 1rem;
+    }
+
     .postcard-meta h3,
     .collection-memory h2,
     .grid-title {
@@ -1203,6 +1256,37 @@
     .meta-grid p,
     .memory-card p {
       font-size: 0.86rem;
+    }
+
+    .cta,
+    .ghost {
+      font-size: 1rem;
+      padding: 0.62rem 0.95rem;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .brand {
+      font-size: 1.03rem;
+    }
+
+    .account-chip {
+      font-size: 0.78rem;
+      padding: 0.45rem 0.55rem;
+    }
+
+    .theme-toggle {
+      width: 2.05rem;
+      height: 2.05rem;
+    }
+
+    .subtext {
+      font-size: 0.9rem;
+    }
+
+    .collection-image,
+    .memory-image {
+      height: 154px;
     }
   }
 </style>
