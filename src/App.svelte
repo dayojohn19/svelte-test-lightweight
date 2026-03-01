@@ -25,7 +25,7 @@
   );
   const LOCAL_STORAGE_USER_ID_KEY = getMarkdownValue('LOCAL_STORAGE_USER_ID_KEY', 'postcard_user_id');
   const LOCAL_STORAGE_THEME_KEY = getMarkdownValue('LOCAL_STORAGE_THEME_KEY', 'postcard_theme');
-  const API_COLLECTION_STR = POSTCARD_DETAILS_API.split('/').filter(Boolean).pop() || 'ZN6RF9';
+  const DEFAULT_COLLECTION_STR = POSTCARD_DETAILS_API.split('/').filter(Boolean).pop() || 'ZN6RF9';
   const LOADING_DELAY_MS = Number(getMarkdownValue('LOADING_DELAY_MS', '1500')) || 1500;
   const MAIN_IMAGE_URL = getMarkdownValue('MAIN_IMAGE_URL', 'https://placehold.co/960x540/png');
   const POSTCARD_MEMORY_IMAGE_URLS = [
@@ -229,6 +229,19 @@
     });
   }
 
+  function getCollectionStrFromUrl() {
+    if (typeof window === 'undefined') {
+      return DEFAULT_COLLECTION_STR;
+    }
+
+    const pathSegments = window.location.pathname
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    return pathSegments[pathSegments.length - 1] || DEFAULT_COLLECTION_STR;
+  }
+
   async function fetchLookPlaceData() {
     const response = await fetch(POSTCARD_DETAILS_API, {
       method: 'POST',
@@ -238,7 +251,7 @@
       body: JSON.stringify({
         username: activeUsername,
         userID: activeUserId,
-        collectionStr: API_COLLECTION_STR
+        collectionStr: getCollectionStrFromUrl()
       })
     });
 
@@ -378,7 +391,7 @@
     formData.append('imageField', uploadImageField.trim());
     formData.append('username', activeUsername);
     formData.append('userID', activeUserId);
-    formData.append('collectionUniqueID', API_COLLECTION_STR);
+    formData.append('collectionUniqueID', getCollectionStrFromUrl());
 
     const response = await fetch(UPLOAD_API_URL, {
       method: 'POST',
