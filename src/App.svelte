@@ -501,8 +501,14 @@
     <div class="brand">Garden Home Postcard</div>
     <div class="account-chip" aria-live="polite">
       <span>Welcome, {activeUsername || 'Guest'}</span>
-      <button class="theme-toggle" type="button" on:click={toggleTheme}>
-        {activeTheme === 'dark' ? 'Light theme' : 'Dark theme'}
+      <button
+        class="theme-toggle"
+        type="button"
+        on:click={toggleTheme}
+        aria-label={activeTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+        title={activeTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+      >
+        {activeTheme === 'dark' ? '☀️' : '🌙'}
       </button>
     </div>
   </header>
@@ -688,10 +694,17 @@
     border: 1px solid #37445f;
     background: #0b1222;
     color: #f4f6fb;
-    padding: 0.25rem 0.6rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
     cursor: pointer;
-    font-size: 0.78rem;
+    font-size: 0.95rem;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex: 0 0 auto;
   }
 
   :global(body[data-theme='light']) {
@@ -1101,11 +1114,6 @@
       order: 2;
       border-radius: 0.8rem;
       padding: 0.5rem 0.65rem;
-    }
-
-    .theme-toggle {
-      width: 100%;
-      min-height: 40px;
     }
 
     .postcard-frame,
