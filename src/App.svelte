@@ -56,6 +56,7 @@
   );
   const LOCAL_STORAGE_USER_ID_KEY = getMarkdownValue('LOCAL_STORAGE_USER_ID_KEY', 'postcard_user_id');
   const LOCAL_STORAGE_THEME_KEY = getMarkdownValue('LOCAL_STORAGE_THEME_KEY', 'postcard_theme');
+  const LOCAL_STORAGE_LANGUAGE_KEY = getMarkdownValue('LOCAL_STORAGE_LANGUAGE_KEY', 'postcard_language');
   const POSTCARD_DETAILS_API_BASE_URL = normalizeLookApiBaseUrl(API_BASE_URL);
   const DEFAULT_COLLECTION_STR = extractDefaultCollectionStr(API_BASE_URL, '11111');
   const LOADING_DELAY_MS = Number(getMarkdownValue('LOADING_DELAY_MS', '1500')) || 1500;
@@ -67,15 +68,151 @@
     getMarkdownValue('COLLECTION_4_URL', 'https://placehold.co/640x400/png?text=Postcard+4')
   ];
   const MEMORY_PROMPT_STORAGE_KEY = 'postcard_memory_prompt_index';
-  const MEMORY_PROMPTS = [
-    "The memory I'll always keep from here is _____.",
-    "I'll never forget this place because _____.",
-    'This place will always remind me of _____.',
-    'When I think of this place, I remember _____.',
-    'What made this place unforgettable was _____.',
-    'The moment that stayed with me here was _____.',
-    'This place meant so much to me because _____.',
-    "One thing I'll never forget about this place is _____."
+  const MEMORY_PROMPTS_BY_LANGUAGE = {
+    en: [
+      "The memory I'll always keep from here is _____.",
+      "I'll never forget this place because _____.",
+      'This place will always remind me of _____.',
+      'When I think of this place, I remember _____.',
+      'What made this place unforgettable was _____.',
+      'The moment that stayed with me here was _____.',
+      'This place meant so much to me because _____.',
+      "One thing I'll never forget about this place is _____."
+    ],
+    ko: [
+      '이곳에서 가장 오래 기억에 남을 순간은 _____.',
+      '이곳을 절대 잊지 못할 이유는 _____.',
+      '이곳은 늘 _____를 떠올리게 해요.',
+      '이곳을 생각하면 _____가 기억나요.',
+      '이곳을 잊을 수 없게 만든 건 _____.',
+      '여기서 가장 마음에 남은 순간은 _____.',
+      '이곳이 특별했던 이유는 _____.',
+      '이곳에서 절대 잊지 못할 한 가지는 _____.'
+    ],
+    zh: [
+      '我会一直记得这里的回忆是 _____.',
+      '我永远不会忘记这里，因为 _____.',
+      '这个地方总会让我想起 _____.',
+      '当我想到这里时，我会想起 _____.',
+      '让这个地方难忘的是 _____.',
+      '在这里最难忘的瞬间是 _____.',
+      '这个地方对我意义重大，因为 _____.',
+      '关于这个地方，我最不会忘记的是 _____.'
+    ]
+  };
+
+  const TRANSLATIONS = {
+    en: {
+      brandTitle: 'Garden Home Postcard',
+      welcome: 'Welcome, {name}',
+      guest: 'Guest',
+      themeToLight: 'Switch to light theme',
+      themeToDark: 'Switch to dark theme',
+      eyebrow: 'MEMORIES, COLLECTED AND SHARED',
+      subtext: 'Collect moments, travel with ease, and share memories.',
+      enterAccount: 'Enter your account',
+      username: 'Username',
+      userId: 'UserID',
+      enterUsername: 'Enter username',
+      enterUserId: 'Enter userID',
+      saveAndContinue: 'Save and Continue',
+      loadingImage: 'Loading image...',
+      scannedPostcardAlt: 'Scanned postcard',
+      location: 'Location',
+      collected: 'Collected',
+      collector: 'Collector',
+      uploading: 'Uploading...',
+      uploadPicture: 'Upload picture',
+      collectionMemory: 'Collection Memory',
+      noCollectionMemory: 'No collection memory found yet.',
+      gridTitle: 'Once There, Now a Memory.',
+      noPostcardData: 'No postcard data found for this account.',
+      fetchError: 'Could not fetch data. Check username and userID.',
+      memoryPromptFallback: "What's your memory about this place?",
+      uploadNeedCredentials: 'Please set username and userID before uploading.',
+      uploadFailed: 'Upload failed.',
+      uploadResponseMissing: 'Upload response missing saved files list.',
+      uploadingFiles: ({ count }) => `Uploading ${count} file${count > 1 ? 's' : ''}...`,
+      uploadedFiles: ({ count }) => `Uploaded ${count} file${count > 1 ? 's' : ''} successfully.`,
+      enterBothCredentials: 'Please enter both username and userID.',
+      imagePreview: 'Image preview'
+    },
+    ko: {
+      brandTitle: '가든 홈 엽서',
+      welcome: '{name}님, 환영합니다',
+      guest: '게스트',
+      themeToLight: '라이트 테마로 전환',
+      themeToDark: '다크 테마로 전환',
+      eyebrow: '추억을 모으고 함께 나눠요',
+      subtext: '순간을 수집하고, 편하게 여행하며, 추억을 공유하세요.',
+      enterAccount: '계정 정보를 입력하세요',
+      username: '사용자 이름',
+      userId: '사용자 ID',
+      enterUsername: '사용자 이름 입력',
+      enterUserId: '사용자 ID 입력',
+      saveAndContinue: '저장하고 계속',
+      loadingImage: '이미지 불러오는 중...',
+      scannedPostcardAlt: '스캔된 엽서',
+      location: '위치',
+      collected: '수집일',
+      collector: '수집자',
+      uploading: '업로드 중...',
+      uploadPicture: '사진 업로드',
+      collectionMemory: '컬렉션 메모리',
+      noCollectionMemory: '아직 컬렉션 메모리가 없습니다.',
+      gridTitle: '그때의 장소, 지금의 추억.',
+      noPostcardData: '이 계정의 엽서 데이터를 찾을 수 없습니다.',
+      fetchError: '데이터를 가져오지 못했습니다. 사용자 이름과 사용자 ID를 확인하세요.',
+      memoryPromptFallback: '이 장소에 대한 당신의 추억은 무엇인가요?',
+      uploadNeedCredentials: '업로드 전에 사용자 이름과 사용자 ID를 설정하세요.',
+      uploadFailed: '업로드에 실패했습니다.',
+      uploadResponseMissing: '업로드 응답에 저장된 파일 목록이 없습니다.',
+      uploadingFiles: ({ count }) => `${count}개 파일 업로드 중...`,
+      uploadedFiles: ({ count }) => `${count}개 파일 업로드 완료.`,
+      enterBothCredentials: '사용자 이름과 사용자 ID를 모두 입력하세요.',
+      imagePreview: '이미지 미리보기'
+    },
+    zh: {
+      brandTitle: '花园之家明信片',
+      welcome: '欢迎，{name}',
+      guest: '访客',
+      themeToLight: '切换到浅色主题',
+      themeToDark: '切换到深色主题',
+      eyebrow: '收集并分享回忆',
+      subtext: '收集瞬间，轻松旅行，分享回忆。',
+      enterAccount: '输入你的账号',
+      username: '用户名',
+      userId: '用户ID',
+      enterUsername: '输入用户名',
+      enterUserId: '输入用户ID',
+      saveAndContinue: '保存并继续',
+      loadingImage: '正在加载图片...',
+      scannedPostcardAlt: '扫描的明信片',
+      location: '地点',
+      collected: '收藏时间',
+      collector: '收藏者',
+      uploading: '上传中...',
+      uploadPicture: '上传图片',
+      collectionMemory: '回忆合集',
+      noCollectionMemory: '暂未找到回忆内容。',
+      gridTitle: '曾经到访，如今成回忆。',
+      noPostcardData: '未找到该账号的明信片数据。',
+      fetchError: '获取数据失败，请检查用户名和用户ID。',
+      memoryPromptFallback: '你对这个地方的回忆是什么？',
+      uploadNeedCredentials: '上传前请先设置用户名和用户ID。',
+      uploadFailed: '上传失败。',
+      uploadResponseMissing: '上传响应缺少已保存文件列表。',
+      uploadingFiles: ({ count }) => `正在上传 ${count} 个文件...`,
+      uploadedFiles: ({ count }) => `成功上传 ${count} 个文件。`,
+      enterBothCredentials: '请输入用户名和用户ID。',
+      imagePreview: '图片预览'
+    }
+  };
+
+  const SUPPORTED_LANGUAGES = [
+    { value: 'en', label: 'EN' },
+    { value: 'ko', label: '한국어' },
+    { value: 'zh', label: '中文' }
   ];
 
   let postcardMemories = [];
@@ -88,10 +225,11 @@
   let uploadInput;
   let uploadImageField = UPLOAD_IMAGE_FIELD;
   let showUploadPictureButton = false;
-  let imageFieldPlaceholder = MEMORY_PROMPTS[0];
+  let imageFieldPlaceholder = MEMORY_PROMPTS_BY_LANGUAGE.en[0];
   let inputUsername = '';
   let inputUserId = '';
   let lightboxImageSrc = '';
+  let currentLanguage = 'en';
   let lightboxImageAlt = 'Image preview';
   let activeUsername = API_USERNAME;
   let activeUserId = API_USER_ID;
@@ -106,6 +244,45 @@
     collectorUsername: '',
     collectorUserId: ''
   };
+
+  function getLanguageLocale() {
+    if (currentLanguage === 'ko') return 'ko-KR';
+    if (currentLanguage === 'zh') return 'zh-CN';
+    return 'en-US';
+  }
+
+  function getMemoryPrompts(languageCode = currentLanguage) {
+    return MEMORY_PROMPTS_BY_LANGUAGE[languageCode] || MEMORY_PROMPTS_BY_LANGUAGE.en;
+  }
+
+  function t(key, params = {}) {
+    const languageTranslations = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
+    const fallbackTranslations = TRANSLATIONS.en;
+    const value = languageTranslations[key] ?? fallbackTranslations[key] ?? key;
+
+    if (typeof value === 'function') {
+      return value(params);
+    }
+
+    return String(value).replace(/\{(\w+)\}/g, (_, token) => params[token] ?? '');
+  }
+
+  function setLanguage(languageCode, shouldPersist = true) {
+    const nextLanguage = SUPPORTED_LANGUAGES.some((language) => language.value === languageCode)
+      ? languageCode
+      : 'en';
+
+    currentLanguage = nextLanguage;
+    imageFieldPlaceholder = getRotatingMemoryPrompt();
+
+    if (lightboxImageSrc) {
+      lightboxImageAlt = t('imagePreview');
+    }
+
+    if (shouldPersist) {
+      safeSetLocalStorageValue(LOCAL_STORAGE_LANGUAGE_KEY, currentLanguage);
+    }
+  }
 
   function normalizeCredential(value) {
     return String(value ?? '')
@@ -323,9 +500,10 @@
     if (!value) return '';
 
     const [year, month, day] = value.split('-').map(Number);
+    const locale = getLanguageLocale();
 
     if (year && month && day) {
-      return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-US', {
+      return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -339,7 +517,7 @@
       return value;
     }
 
-    return parsed.toLocaleDateString('en-US', {
+    return parsed.toLocaleDateString(locale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -360,12 +538,12 @@
         scannedPostcardDetails = toPostcardDetails(postcardMemories[0]);
         scannedPostcardSrc = postcardMemories[0].src || MAIN_IMAGE_URL;
       } else {
-        credentialsError = 'No postcard data found for this account.';
+        credentialsError = t('noPostcardData');
         showCredentialsForm = true;
       }
     } catch (error) {
       console.error(error);
-      credentialsError = 'Could not fetch data. Check username and userID.';
+      credentialsError = t('fetchError');
       showCredentialsForm = true;
     } finally {
       isLoadingPostcard = false;
@@ -392,8 +570,10 @@
   }
 
   function getRotatingMemoryPrompt() {
-    if (!MEMORY_PROMPTS.length) {
-      return "What's your memory about this place?";
+    const memoryPrompts = getMemoryPrompts();
+
+    if (!memoryPrompts.length) {
+      return t('memoryPromptFallback');
     }
 
     const previousPromptIndex = Number.parseInt(
@@ -401,20 +581,20 @@
       10
     );
 
-    let nextPromptIndex = Math.floor(Math.random() * MEMORY_PROMPTS.length);
+    let nextPromptIndex = Math.floor(Math.random() * memoryPrompts.length);
 
     if (
-      MEMORY_PROMPTS.length > 1 &&
+      memoryPrompts.length > 1 &&
       Number.isInteger(previousPromptIndex) &&
       previousPromptIndex >= 0 &&
-      previousPromptIndex < MEMORY_PROMPTS.length &&
+      previousPromptIndex < memoryPrompts.length &&
       nextPromptIndex === previousPromptIndex
     ) {
-      nextPromptIndex = (nextPromptIndex + 1) % MEMORY_PROMPTS.length;
+      nextPromptIndex = (nextPromptIndex + 1) % memoryPrompts.length;
     }
 
     safeSetLocalStorageValue(MEMORY_PROMPT_STORAGE_KEY, String(nextPromptIndex));
-    return MEMORY_PROMPTS[nextPromptIndex];
+    return memoryPrompts[nextPromptIndex];
   }
 
   async function uploadImages(files) {
@@ -449,10 +629,94 @@
     }
 
     if (!Array.isArray(responseBody?.saved)) {
-      throw new Error('Upload response missing saved files list.');
+      throw new Error(t('uploadResponseMissing'));
     }
 
     return responseBody.saved;
+  }
+
+  function getUploadedImageUrl(savedItem, fallbackFile) {
+    if (typeof savedItem === 'string') {
+      return savedItem;
+    }
+
+    return (
+      savedItem?.memoryPicture ||
+      savedItem?.image ||
+      savedItem?.imageUrl ||
+      savedItem?.url ||
+      savedItem?.src ||
+      savedItem?.path ||
+      fallbackFile?.previewUrl ||
+      ''
+    );
+  }
+
+  function appendUploadedItemsToCollectionMemory(savedItems, uploadedFiles) {
+    const nowIso = new Date().toISOString();
+
+    const newMemoryItems = savedItems
+      .map((savedItem, index) => {
+        const fallbackFile = uploadedFiles[index];
+        const imageUrl = getUploadedImageUrl(savedItem, fallbackFile);
+
+        if (!imageUrl) {
+          return null;
+        }
+
+        const memoryAbout =
+          (typeof savedItem === 'object' && savedItem?.memoryAbout) ||
+          uploadImageField.trim() ||
+          fallbackFile?.name ||
+          `Uploaded memory ${index + 1}`;
+
+        return {
+          id:
+            (typeof savedItem === 'object' && (savedItem?.id || savedItem?.memoryID)) ||
+            `uploaded-memory-${Date.now()}-${index + 1}`,
+          memoryAbout,
+          memoryPicture: imageUrl,
+          memoryisPrivate: false,
+          memoryTimestamp:
+            (typeof savedItem === 'object' && (savedItem?.memoryTimestamp || savedItem?.timestamp)) || nowIso
+        };
+      })
+      .filter(Boolean);
+
+    if (!newMemoryItems.length) {
+      return;
+    }
+
+    if (!postcardMemories.length) {
+      postcardMemories = [
+        {
+          id: getCollectionStrFromUrl(),
+          title: scannedPostcardDetails.title,
+          body: scannedPostcardDetails.subtitle,
+          src: scannedPostcardSrc,
+          collector: scannedPostcardDetails.collector,
+          collectorUsername: scannedPostcardDetails.collectorUsername,
+          collectorUserId: scannedPostcardDetails.collectorUserId,
+          collected: scannedPostcardDetails.collected,
+          location: scannedPostcardDetails.location,
+          collectionMemory: newMemoryItems
+        }
+      ];
+      return;
+    }
+
+    const [firstCollection, ...remainingCollections] = postcardMemories;
+    const existingMemory = Array.isArray(firstCollection?.collectionMemory)
+      ? firstCollection.collectionMemory
+      : [];
+
+    postcardMemories = [
+      {
+        ...firstCollection,
+        collectionMemory: [...newMemoryItems, ...existingMemory]
+      },
+      ...remainingCollections
+    ];
   }
 
   function openUploadPicker() {
@@ -472,20 +736,21 @@
     }
 
     if (!activeUsername || !activeUserId) {
-      uploadStatus = 'Please set username and userID before uploading.';
+      uploadStatus = t('uploadNeedCredentials');
       event.currentTarget.value = '';
       return;
     }
 
     isUploadingImages = true;
-    uploadStatus = `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`;
+    uploadStatus = t('uploadingFiles', { count: files.length });
 
     try {
       const saved = await uploadImages(files);
-      uploadStatus = `Uploaded ${saved.length} file${saved.length > 1 ? 's' : ''} successfully.`;
+      appendUploadedItemsToCollectionMemory(saved, files);
+      uploadStatus = t('uploadedFiles', { count: saved.length });
     } catch (error) {
       console.error('Upload failed:', error);
-      uploadStatus = error?.message || 'Upload failed.';
+      uploadStatus = error?.message || t('uploadFailed');
     }
 
     isUploadingImages = false;
@@ -497,7 +762,7 @@
     const normalizedUserId = inputUserId.trim();
 
     if (!normalizedUsername || !normalizedUserId) {
-      credentialsError = 'Please enter both username and userID.';
+      credentialsError = t('enterBothCredentials');
       return;
     }
 
@@ -510,7 +775,7 @@
     await loadPostcardData();
   }
 
-  function openImagePreview(src, alt = 'Image preview') {
+  function openImagePreview(src, alt = t('imagePreview')) {
     if (!src) {
       return;
     }
@@ -521,14 +786,15 @@
 
   function closeImagePreview() {
     lightboxImageSrc = '';
-    lightboxImageAlt = 'Image preview';
+    lightboxImageAlt = t('imagePreview');
   }
 
   onMount(async () => {
     const savedTheme = safeGetLocalStorageValue(LOCAL_STORAGE_THEME_KEY);
     applyTheme(savedTheme === 'light' ? 'light' : 'dark', false);
 
-    imageFieldPlaceholder = getRotatingMemoryPrompt();
+    const savedLanguage = safeGetLocalStorageValue(LOCAL_STORAGE_LANGUAGE_KEY)?.trim();
+    setLanguage(savedLanguage || 'en', false);
 
     const savedUsername = safeGetLocalStorageValue(LOCAL_STORAGE_USERNAME_KEY)?.trim();
     const savedUserId = safeGetLocalStorageValue(LOCAL_STORAGE_USER_ID_KEY)?.trim();
@@ -547,15 +813,28 @@
 
 <div class="page">
   <header class="topbar">
-    <div class="brand">Garden Home Postcard</div>
+    <div class="brand">{t('brandTitle')}</div>
     <div class="account-chip" aria-live="polite">
-      <span>Welcome, {activeUsername || 'Guest'}</span>
+      <span>{t('welcome', { name: activeUsername || t('guest') })}</span>
+      <div class="lang-switch" role="group" aria-label="Language selector">
+        {#each SUPPORTED_LANGUAGES as language}
+          <button
+            class="lang-btn"
+            class:is-active={currentLanguage === language.value}
+            type="button"
+            on:click={() => setLanguage(language.value)}
+            aria-pressed={currentLanguage === language.value}
+          >
+            {language.label}
+          </button>
+        {/each}
+      </div>
       <button
         class="theme-toggle"
         type="button"
         on:click={toggleTheme}
-        aria-label={activeTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-        title={activeTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+        aria-label={activeTheme === 'dark' ? t('themeToLight') : t('themeToDark')}
+        title={activeTheme === 'dark' ? t('themeToLight') : t('themeToDark')}
       >
         {activeTheme === 'dark' ? '☀️' : '🌙'}
       </button>
@@ -563,27 +842,27 @@
   </header>
 
   <section class="hero">
-    <p class="eyebrow">MEMORIES, COLLECTED AND SHARED</p>
+    <p class="eyebrow">{t('eyebrow')}</p>
     <p class="subtext">
-      Collect moments, travel with ease, and share memories.
+      {t('subtext')}
     </p>
 
     {#if showCredentialsForm}
       <div class="credentials-box" aria-live="polite">
-        <h3>Enter your account</h3>
+        <h3>{t('enterAccount')}</h3>
         <form class="credentials-form" on:submit|preventDefault={submitCredentials}>
           <label>
-            Username
-            <input bind:value={inputUsername} type="text" placeholder="Enter username" />
+            {t('username')}
+            <input bind:value={inputUsername} type="text" placeholder={t('enterUsername')} />
           </label>
           <label>
-            UserID
-            <input bind:value={inputUserId} type="text" placeholder="Enter userID" />
+            {t('userId')}
+            <input bind:value={inputUserId} type="text" placeholder={t('enterUserId')} />
           </label>
           {#if credentialsError}
             <p class="credentials-error">{credentialsError}</p>
           {/if}
-          <button class="cta" type="submit">Save and Continue</button>
+          <button class="cta" type="submit">{t('saveAndContinue')}</button>
         </form>
       </div>
     {:else}
@@ -591,24 +870,23 @@
         {#if isLoadingPostcard}
           <div class="loading-state">
             <span class="spinner" aria-hidden="true"></span>
-            <span>Loading image...</span>
+            <span>{t('loadingImage')}</span>
           </div>
         {:else}
-          <img id="scanned-postcard" src={scannedPostcardSrc} alt="Scanned postcard" />
+          <img id="scanned-postcard" src={scannedPostcardSrc} alt={t('scannedPostcardAlt')} />
           <div class="postcard-meta" id="scanned-postcard-meta">
             <h3>{scannedPostcardDetails.title}</h3>
             <p class="subtitle">{scannedPostcardDetails.subtitle}</p>
             <div class="meta-grid">
-              <p><span>Location</span>{scannedPostcardDetails.location}</p>
-              <p><span>Collected</span>{formatCollectedDate(scannedPostcardDetails.collected)}</p>
-              <p><span>Collector</span>{scannedPostcardDetails.collector}</p>
+              <p><span>{t('location')}</span>{scannedPostcardDetails.location}</p>
+              <p><span>{t('collected')}</span>{formatCollectedDate(scannedPostcardDetails.collected)}</p>
+              <p><span>{t('collector')}</span>{scannedPostcardDetails.collector}</p>
             </div>
             {#if isCollectorAccountMatch()}
               <div class="hero-actions">
-                <button class="ghost">Join WhatsApp Group</button>
                 {#if showUploadPictureButton}
                   <button class="cta" type="button" on:click={openUploadPicker} disabled={isUploadingImages}>
-                    {isUploadingImages ? 'Uploading...' : 'Upload picture'}
+                    {isUploadingImages ? t('uploading') : t('uploadPicture')}
                   </button>
                 {/if}
                 <input
@@ -642,7 +920,7 @@
   </section>
 
   <section class="collection-memory">
-    <h2>Collection Memory</h2>
+    <h2>{t('collectionMemory')}</h2>
     {#if getCollectionMemoryItems().length}
       <div class="memory-grid">
         {#each getCollectionMemoryItems() as memory}
@@ -658,7 +936,6 @@
             {/if}
             <h3>{memory.about}</h3>
             <p class="memory-meta">
-              <span>{memory.isPrivate ? 'Private' : 'Public'}</span>
               {#if memory.timestamp}
                 <span>{formatCollectedDate(memory.timestamp)}</span>
               {/if}
@@ -667,11 +944,11 @@
         {/each}
       </div>
     {:else}
-      <p class="memory-empty">No collection memory found yet.</p>
+      <p class="memory-empty">{t('noCollectionMemory')}</p>
     {/if}
   </section>
 
-  <h2 class="grid-title">Once There, Now a Memory.</h2>
+  <h2 class="grid-title">{t('gridTitle')}</h2>
   <section class="grid">
     {#each postcardMemories as postcard}
       <article class="card">
@@ -756,6 +1033,32 @@
     flex: 0 0 auto;
   }
 
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .lang-btn {
+    font: inherit;
+    border-radius: 999px;
+    border: 1px solid #37445f;
+    background: #0b1222;
+    color: #dbe5f7;
+    min-height: 2rem;
+    padding: 0.2rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.72rem;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  .lang-btn.is-active {
+    background: #00a8ff;
+    border-color: #00a8ff;
+    color: #00121d;
+  }
+
   :global(body[data-theme='light']) {
     background: #eef3fb;
     color: #0f172a;
@@ -779,6 +1082,18 @@
     background: #0f172a;
     border-color: #0f172a;
     color: #f8fafc;
+  }
+
+  :global(body[data-theme='light'] .lang-btn) {
+    background: #ffffff;
+    border-color: #bfd0e8;
+    color: #334155;
+  }
+
+  :global(body[data-theme='light'] .lang-btn.is-active) {
+    background: #0077c8;
+    border-color: #0077c8;
+    color: #ffffff;
   }
 
   :global(body[data-theme='light'] .eyebrow) {
@@ -828,6 +1143,19 @@
     color: #1f2937;
     background: #ffffff;
     border-color: #bfd0e8;
+  }
+
+  :global(body[data-theme='light'] .image-field-input) {
+    background-image:
+      linear-gradient(
+        110deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(15, 23, 42, 0.05) 45%,
+        rgba(15, 23, 42, 0.14) 50%,
+        rgba(15, 23, 42, 0.05) 55%,
+        rgba(255, 255, 255, 0) 100%
+      ),
+      linear-gradient(#ffffff, #ffffff);
   }
 
   .cta,
@@ -900,6 +1228,26 @@
     width: min(100%, 640px);
     flex: 1 1 100%;
     box-sizing: border-box;
+    background-image:
+      linear-gradient(
+        110deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.07) 45%,
+        rgba(255, 255, 255, 0.18) 50%,
+        rgba(255, 255, 255, 0.07) 55%,
+        rgba(255, 255, 255, 0) 100%
+      ),
+      linear-gradient(#121825, #121825);
+    background-repeat: no-repeat;
+    background-size: 220% 100%, 100% 100%;
+    background-position: 140% 0, 0 0;
+    animation: inputSweep 2.6s linear infinite;
+  }
+
+  .image-field-input:focus,
+  .image-field-input:not(:placeholder-shown) {
+    animation: none;
+    background-position: 0 0, 0 0;
   }
 
   .credentials-box {
@@ -975,6 +1323,7 @@
     display: block;
     width: 100%;
     height: auto;
+    max-height: 80vh;
     object-fit: cover;
   }
 
@@ -1019,6 +1368,23 @@
   @keyframes spin {
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  @keyframes inputSweep {
+    from {
+      background-position: 140% 0, 0 0;
+    }
+
+    to {
+      background-position: -120% 0, 0 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .image-field-input {
+      animation: none;
+      background-position: 0 0, 0 0;
     }
   }
 
@@ -1178,6 +1544,18 @@
       font-size: 1rem;
     }
 
+    .lang-switch {
+      flex: 1 1 auto;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .lang-btn {
+      min-height: 2.15rem;
+      padding: 0.3rem 0.55rem;
+      font-size: 0.7rem;
+    }
+
     .postcard-frame,
     .credentials-box {
       width: 100%;
@@ -1314,6 +1692,11 @@
     .theme-toggle {
       width: 2.05rem;
       height: 2.05rem;
+    }
+
+    .lang-btn {
+      font-size: 0.66rem;
+      padding: 0.28rem 0.5rem;
     }
 
     .subtext {
