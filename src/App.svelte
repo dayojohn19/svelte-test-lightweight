@@ -768,17 +768,6 @@
     border-color: #bfd0e8;
   }
 
-  nav {
-    display: flex;
-    gap: 1rem;
-  }
-
-  nav a {
-    color: #c9d2e3;
-    text-decoration: none;
-    font-size: 0.95rem;
-  }
-
   .cta,
   .ghost {
     font: inherit;
@@ -811,13 +800,6 @@
     letter-spacing: 0.08em;
     font-size: 0.75rem;
     font-weight: 700;
-  }
-
-  h1 {
-    margin: 0.6rem 0;
-    font-size: clamp(2rem, 5vw, 3.3rem);
-    line-height: 1.1;
-    letter-spacing: -0.03em;
   }
 
   .subtext {
@@ -1175,9 +1157,6 @@
       gap: 0.65rem;
     }
 
-    nav {
-      display: none;
-    }
   }
 
   @media (max-width: 420px) {
