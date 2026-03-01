@@ -2,8 +2,8 @@
 
 Update values below to change app behavior.
 
-API_BASE_URL: http://127.0.0.1:8000/garden/look/ZN6RF9
-UPLOAD_API_URL: http://127.0.0.1:8000/garden/upload_images/
+API_BASE_URL: http://testtest.com/garden/look/ZN6RF9
+UPLOAD_API_URL: http://testtest.com/garden/upload_images/
 UPLOAD_IMAGE_FIELD:
 API_USERNAME:
 API_USER_ID:
