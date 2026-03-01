@@ -876,7 +876,6 @@
           <img id="scanned-postcard" src={scannedPostcardSrc} alt={t('scannedPostcardAlt')} />
           <div class="postcard-meta" id="scanned-postcard-meta">
             <h3>{scannedPostcardDetails.title}</h3>
-            <p class="subtitle">{scannedPostcardDetails.subtitle}</p>
             <div class="meta-grid">
               <p><span>{t('location')}</span>{scannedPostcardDetails.location}</p>
               <p><span>{t('collected')}</span>{formatCollectedDate(scannedPostcardDetails.collected)}</p>
